@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 
 // Scene
@@ -22,6 +21,29 @@ const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.target.copy(laptopCenter)
 controls.update()
+const raycaster = new THREE.Raycaster()
+const mouse = new THREE.Vector2()
+
+window.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1
+})
+
+window.addEventListener('click', () => {
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObject(laptopLid)
+
+    if (intersects.length > 0) {
+        const uv = intersects[0].uv
+        const x = uv.x * 1920
+        const y = (1 - uv.y) * 1080
+
+        if (y < TAB_HEIGHT) {
+            activeTab = Math.floor(x / TAB_WIDTH)
+            drawScreen()
+        }
+    }
+})
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
@@ -54,7 +76,7 @@ scene.add(desk)
 // Laptop
 const bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555 })
 
-const laptopBase = new THREE.Mesh(new RoundedBoxGeometry(1.0, 0.05, 0.65, 4, 0.02), bodyMat)
+const laptopBase = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.05, 0.65), bodyMat)
 laptopBase.position.set(0, 0.825, 0)
 scene.add(laptopBase)
 
@@ -67,12 +89,19 @@ ctx.fillRect(0, 0, 1920, 1080)
 ctx.fillStyle = '#ffffff'
 ctx.font = 'bold 80px sans-serif'
 ctx.textAlign = 'center'
-ctx.fillText('lofi portfolio', 960, 540)
+
+
+const tabs = ['About', 'Work', 'Socials', 'Contact']
+let activeTab = 0
+let hoveredTab = -1
+
+const TAB_HEIGHT = 80
+const TAB_WIDTH = 1920 / tabs.length
 
 const screenTexture = new THREE.CanvasTexture(screenCanvas)
-const laptopLid = new THREE.Mesh(new RoundedBoxGeometry(1.0, 0.62, 0.05, 4, 0.02), [
+const laptopLid = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.62, 0.05), [
     bodyMat, bodyMat, bodyMat, bodyMat,
-    new THREE.MeshStandardMaterial({ map: screenTexture }), // front = screen
+    new THREE.MeshStandardMaterial({ map: screenTexture }),
     bodyMat
 ])
 laptopLid.position.set(0, 1.135, -0.3)
@@ -98,7 +127,69 @@ function animate() {
     requestAnimationFrame(animate)
     screenTexture.needsUpdate = true
     controls.update()
+
+    raycaster.setFromCamera(mouse, camera)
+    const intersects = raycaster.intersectObject(laptopLid)
+
+    if (intersects.length > 0) {
+        document.body.style.cursor = 'pointer'
+        controls.enabled = false
+
+        const uv = intersects[0].uv
+        const x = uv.x * 1920
+        const y = (1 - uv.y) * 1080
+
+        const newHovered = y < TAB_HEIGHT ? Math.floor(x / TAB_WIDTH) : -1
+        if (newHovered !== hoveredTab) {
+            hoveredTab = newHovered
+            drawScreen()
+        }
+    } else {
+        document.body.style.cursor = 'default'
+        controls.enabled = true
+        if (hoveredTab !== -1) {
+            hoveredTab = -1
+            drawScreen()
+        }
+    }
+
     renderer.render(scene, camera)
 }
 
+function drawScreen() {
+    // Background
+    ctx.fillStyle = '#1a1a2e'
+    ctx.fillRect(0, 0, 1920, 1080)
+
+    // Tab bar
+    const tabColors = ['#ff6b8a', '#ff9f45', '#ffd93d', '#6bcb77']
+    tabs.forEach((tab, i) => {
+        const x = i * TAB_WIDTH
+
+        if (i === activeTab) {
+            ctx.fillStyle = tabColors[i]
+        } else if (i === hoveredTab) {
+            ctx.fillStyle = tabColors[i] + 'aa' // etwas transparenter
+        } else {
+            ctx.fillStyle = '#111122'
+        }
+
+        ctx.fillRect(x, 0, TAB_WIDTH, TAB_HEIGHT)
+
+        ctx.fillStyle = i === activeTab ? '#333333' : '#ffffff'
+        ctx.font = 'bold 36px Nunito'
+        ctx.textAlign = 'center'
+        ctx.fillText(tab, x + TAB_WIDTH / 2, 52)
+    })
+
+    // Content area
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 60px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(tabs[activeTab], 960, 600)
+}
+
+document.fonts.ready.then(() => {
+    drawScreen()
+})
 animate()
