@@ -4,6 +4,10 @@ import { screenTexture, drawScreen, TAB_HEIGHT, TAB_WIDTH } from './screen.js'
 import * as screen from './screen.js'
 import { camera, renderer, controls, scene } from './scene.js'
 
+document.fonts.ready.then(() => {
+    drawScreen()
+})
+
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 
