@@ -6,7 +6,10 @@ const scene = new THREE.Scene()
 
 scene.background = new THREE.Color(0xffffff)
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-camera.position.set(0, 2, 5)
+const laptopCenter = new THREE.Vector3(0, 1.1, -0.3)
+
+camera.position.set(0, 1.1, 0.19)
+camera.lookAt(laptopCenter)
 
 const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
@@ -14,6 +17,9 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
+controls.target.copy(laptopCenter)
+controls.update()
+
 
 // Floor
 const floorGeo = new THREE.PlaneGeometry(10, 7)
