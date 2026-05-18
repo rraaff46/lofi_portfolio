@@ -1,15 +1,19 @@
 import * as THREE from 'three'
 import { laptopLid } from './meshes.js'
-import { screenTexture, drawScreen, TAB_HEIGHT, TAB_WIDTH } from './screen.js'
+import { screenTexture, drawScreen, TAB_W, TAB_OFFSET, TAB_GAP, tabs } from './screen.js'
 import * as screen from './screen.js'
 import { camera, renderer, controls, scene } from './scene.js'
 
-document.fonts.ready.then(() => {
-    drawScreen()
-})
-
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
+
+function getTabIndex(x, y) {
+    if (y > 60 || y < 0) return -1
+    return tabs.findIndex((_, i) => {
+        const tabX = i * (TAB_W + TAB_GAP) + TAB_OFFSET
+        return x >= tabX && x <= tabX + TAB_W
+    })
+}
 
 window.addEventListener('mousemove', (e) => {
     mouse.x = (e.clientX / window.innerWidth) * 2 - 1
@@ -25,8 +29,9 @@ window.addEventListener('click', () => {
         const x = uv.x * 1920
         const y = (1 - uv.y) * 1080
 
-        if (y < TAB_HEIGHT) {
-            screen.state.activeTab = Math.floor(x / TAB_WIDTH)
+        const tabIndex = getTabIndex(x, y)
+        if (tabIndex !== -1) {
+            screen.state.activeTab = tabIndex
             drawScreen()
         }
     }
@@ -48,7 +53,7 @@ function animate() {
         const x = uv.x * 1920
         const y = (1 - uv.y) * 1080
 
-        const newHovered = y < TAB_HEIGHT ? Math.floor(x / TAB_WIDTH) : -1
+        const newHovered = getTabIndex(x, y)
         if (newHovered !== screen.state.hoveredTab) {
             screen.state.hoveredTab = newHovered
             drawScreen()
@@ -64,5 +69,9 @@ function animate() {
 
     renderer.render(scene, camera)
 }
+
+document.fonts.ready.then(() => {
+    drawScreen()
+})
 
 animate()

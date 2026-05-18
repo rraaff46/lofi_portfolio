@@ -25,8 +25,8 @@ laptopBase.position.set(0, 0.825, 0)
 scene.add(laptopBase)
 
 // Laptop lid (material set in screen.js)
-export const laptopLid = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.62, 0.05), bodyMat)
-laptopLid.position.set(0, 1.135, -0.3)
+export const laptopLid = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.5625, 0.05), bodyMat)
+laptopLid.position.set(0, 1.11, -0.3)
 scene.add(laptopLid)
 
 // Cabinet
