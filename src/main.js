@@ -1,14 +1,13 @@
 import * as THREE from 'three'
 import { laptopLid } from './meshes.js'
-import { screenTexture, drawScreen, TAB_W, TAB_OFFSET, TAB_GAP, tabs } from './screen.js'
-import * as screen from './screen.js'
+import { drawScreen, state, TAB_W, TAB_OFFSET, TAB_GAP, TABBAR_H, CONTENT_Y, tabs, ADDRESS_X, ADDRESS_W } from './screen.js'
 import { camera, renderer, controls, scene } from './scene.js'
 
 const raycaster = new THREE.Raycaster()
 const mouse = new THREE.Vector2()
 
 function getTabIndex(x, y) {
-    if (y > 60 || y < 0) return -1
+    if (y < TABBAR_H || y > CONTENT_Y) return -1
     return tabs.findIndex((_, i) => {
         const tabX = i * (TAB_W + TAB_GAP) + TAB_OFFSET
         return x >= tabX && x <= tabX + TAB_W
@@ -31,7 +30,7 @@ window.addEventListener('click', () => {
 
         const tabIndex = getTabIndex(x, y)
         if (tabIndex !== -1) {
-            screen.state.activeTab = tabIndex
+            state.activeTab = tabIndex
             drawScreen()
         }
     }
@@ -39,7 +38,6 @@ window.addEventListener('click', () => {
 
 function animate() {
     requestAnimationFrame(animate)
-    screenTexture.needsUpdate = true
     controls.update()
 
     raycaster.setFromCamera(mouse, camera)
@@ -54,15 +52,22 @@ function animate() {
         const y = (1 - uv.y) * 1080
 
         const newHovered = getTabIndex(x, y)
-        if (newHovered !== screen.state.hoveredTab) {
-            screen.state.hoveredTab = newHovered
+        if (newHovered !== state.hoveredTab) {
+            state.hoveredTab = newHovered
+            drawScreen()
+        }
+
+        const newAddressHovered = y >= 0 && y < TABBAR_H && x >= ADDRESS_X && x <= ADDRESS_X + ADDRESS_W
+        if (newAddressHovered !== state.addressHovered) {
+            state.addressHovered = newAddressHovered
             drawScreen()
         }
     } else {
         document.body.style.cursor = 'default'
         controls.enabled = true
-        if (screen.state.hoveredTab !== -1) {
-            screen.state.hoveredTab = -1
+        if (state.hoveredTab !== -1) {
+            state.hoveredTab = -1
+            state.addressHovered = false
             drawScreen()
         }
     }

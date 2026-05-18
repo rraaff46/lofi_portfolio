@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { scene } from './scene.js'
 
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555 })
+export const bodyMat = new THREE.MeshStandardMaterial({ color: 0x555555 })
 
 // Floor
 const floor = new THREE.Mesh(
